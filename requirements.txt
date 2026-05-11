@@ -1,0 +1,7 @@
+# Core dependencies for AI changelog generator
+
+# CTranslate2 backend (recommended for production)
+ctranslate2>=4.0.0
+
+# Transformers for tokenizer and optional backend
+transformers>=4.30.0
