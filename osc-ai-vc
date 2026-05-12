@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+"""Legacy standalone script for OSC AI changelog wrapper.
+
+This script is a wrapper around the changelog_ai package.
+For installation via pip, use the 'osc-ai-vc' command instead.
+"""
+
+if __name__ == "__main__":
+    from changelog_ai.osc_wrapper import main
+    main()

@@ -34,8 +34,8 @@ Examples:
   # Use different repo path
   %(prog)s --repo-path /path/to/package
 
-  # Use transformers backend (slower but more compatible)
-  %(prog)s --backend transformers
+  # Use custom model path
+  %(prog)s --model-path /path/to/models
         """,
     )
 
@@ -67,7 +67,7 @@ Examples:
 
     parser.add_argument(
         "--model-path",
-        help="Path to T5 model directory (default: ~/scratch/t5-finetune-changelog)",
+        help="Path to T5 model directory (default: $XDG_CACHE_HOME/changelog-ai or ~/.local/share/changelog-ai)",
     )
 
     parser.add_argument(

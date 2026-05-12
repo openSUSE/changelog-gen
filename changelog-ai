@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+"""Legacy standalone script for AI changelog generator.
+
+This script is a wrapper around the changelog_ai package.
+For installation via pip, use the 'changelog-ai' command instead.
+"""
+
+if __name__ == "__main__":
+    from changelog_ai.cli import main
+    main()

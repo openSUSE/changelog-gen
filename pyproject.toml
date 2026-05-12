@@ -30,6 +30,7 @@ classifiers = [
 dependencies = [
     "tokenizers>=0.13.0",
     "ctranslate2>=4.0.0",
+    "requests>=2.25.0",
 ]
 
 [project.optional-dependencies]

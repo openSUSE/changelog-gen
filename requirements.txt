@@ -5,3 +5,6 @@ ctranslate2>=4.0.0
 
 # Tokenizers library for T5 tokenization (replaces sentencepiece)
 tokenizers>=0.13.0
+
+# Requests for model downloads
+requests>=2.25.0
