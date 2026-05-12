@@ -1,12 +1,10 @@
-#!/usr/bin/python3
 """OSC wrapper for AI changelog generation."""
 
 import argparse
-import os
 import sys
 from pathlib import Path
 
-from .cli import get_changes, get_package_info, create_changelog_entry, open_editor
+from .cli import get_changes, create_changelog_entry, open_editor
 from .model import ChangelogGenerator
 
 
@@ -97,7 +95,7 @@ def main():
     input_text = f"create structured changelog for package {package}:\n{changes}"
 
     # Load model and generate
-    print(f"Loading model...", file=sys.stderr)
+    print("Loading model...", file=sys.stderr)
 
     try:
         generator = ChangelogGenerator(
