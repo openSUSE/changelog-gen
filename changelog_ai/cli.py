@@ -47,13 +47,6 @@ Examples:
     )
 
     parser.add_argument(
-        "--backend",
-        choices=["transformers", "ctranslate2"],
-        default="ctranslate2",
-        help="Inference backend (default: ctranslate2, faster)",
-    )
-
-    parser.add_argument(
         "--quantization",
         choices=["float32", "float16", "int8_float16", "int8"],
         default="int8",
@@ -270,14 +263,13 @@ def main():
 
     # Load model and generate
     print(
-        f"Loading model: t5-{args.model_size} with {args.backend} backend...",
+        f"Loading model: t5-{args.model_size} using CTranslate2 backend...",
         file=sys.stderr,
     )
 
     try:
         generator = ChangelogGenerator(
             model_size=args.model_size,
-            backend=args.backend,
             quantization=args.quantization,
             device=args.device,
             model_path=args.model_path,

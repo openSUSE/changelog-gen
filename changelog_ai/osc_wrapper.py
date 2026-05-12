@@ -25,13 +25,6 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--backend",
-        choices=["transformers", "ctranslate2"],
-        default="ctranslate2",
-        help="Backend: transformers/ctranslate2 (default: ctranslate2)",
-    )
-
-    parser.add_argument(
         "--quantization",
         choices=["float32", "float16", "int8_float16", "int8"],
         default="int8",
@@ -74,7 +67,7 @@ def main():
                 project = f.read().strip()
 
         print(f"Generating AI changelog for package: {package} (project: {project})")
-        print(f"Using model: t5-{args.model_size}, backend: {args.backend}")
+        print(f"Using model: t5-{args.model_size} (CTranslate2)")
         print()
     except Exception as e:
         print(f"Error reading osc metadata: {e}", file=sys.stderr)
@@ -109,7 +102,6 @@ def main():
     try:
         generator = ChangelogGenerator(
             model_size=args.model_size,
-            backend=args.backend,
             quantization=args.quantization,
             device=args.device,
             model_path=args.model_path,

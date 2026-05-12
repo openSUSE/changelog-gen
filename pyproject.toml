@@ -28,20 +28,11 @@ classifiers = [
 ]
 
 dependencies = [
-    "transformers>=4.30.0",
+    "tokenizers>=0.13.0",
+    "ctranslate2>=4.0.0",
 ]
 
 [project.optional-dependencies]
-ctranslate2 = [
-    "ctranslate2>=4.0.0",
-]
-transformers-backend = [
-    "torch>=2.0.0",
-]
-all = [
-    "ctranslate2>=4.0.0",
-    "torch>=2.0.0",
-]
 dev = [
     "pytest>=7.0",
     "black>=22.0",

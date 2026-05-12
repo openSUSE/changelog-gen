@@ -3,14 +3,22 @@
 import re
 from pathlib import Path
 
+try:
+    import ctranslate2
+    from tokenizers import Tokenizer
+except ImportError:
+    raise ImportError(
+        "ctranslate2 or tokenizers not installed. "
+        "Install with: pip install ctranslate2 tokenizers"
+    )
+
 
 class ChangelogGenerator:
-    """Wrapper for T5 changelog generation models."""
+    """Wrapper for T5 changelog generation models using CTranslate2."""
 
     def __init__(
         self,
         model_size="large",
-        backend="ctranslate2",
         quantization="int8",
         device="cpu",
         model_path=None,
@@ -20,13 +28,11 @@ class ChangelogGenerator:
 
         Args:
             model_size: Model size (small/base/large)
-            backend: Backend to use (ctranslate2/transformers)
             quantization: CTranslate2 quantization level
             device: Device to run on (cpu/cuda)
             model_path: Path to model directory
         """
         self.model_size = model_size
-        self.backend = backend
         self.quantization = quantization
         self.device = device
 
@@ -39,50 +45,15 @@ class ChangelogGenerator:
         self.tokenizer = None
         self._load_model()
 
-    def _load_model_transformers(self):
-        """Load model using transformers backend."""
-        try:
-            from transformers import AutoTokenizer, T5ForConditionalGeneration
-        except ImportError:
-            raise ImportError(
-                "transformers not installed. "
-                "Install with: pip install transformers torch"
-            )
-
-        model_path = self.model_path / f"t5-{self.model_size}"
-
-        if not model_path.exists():
-            raise FileNotFoundError(f"Model not found at {model_path}")
-
-        self.tokenizer = AutoTokenizer.from_pretrained(str(model_path))
-        self.model = T5ForConditionalGeneration.from_pretrained(str(model_path))
-
-        if self.device == "cuda":
-            import torch
-
-            if torch.cuda.is_available():
-                self.model = self.model.to("cuda")
-            else:
-                print("Warning: CUDA not available, using CPU")
-                self.device = "cpu"
-
-    def _load_model_ctranslate2(self):
+    def _load_model(self):
         """Load model using CTranslate2 backend."""
-        try:
-            import ctranslate2
-            from transformers import AutoTokenizer
-        except ImportError:
-            raise ImportError(
-                "ctranslate2 or transformers not installed. "
-                "Install with: pip install ctranslate2 transformers"
-            )
-
         model_path = (
             self.model_path
             / "ct2_models"
             / f"t5-{self.model_size}-ct2-{self.quantization}"
         )
-        tokenizer_path = self.model_path / f"t5-{self.model_size}"
+        # T5 tokenizer uses Hugging Face tokenizer.json format
+        tokenizer_path = self.model_path / f"t5-{self.model_size}" / "tokenizer.json"
 
         if not model_path.exists():
             raise FileNotFoundError(f"CTranslate2 model not found at {model_path}")
@@ -91,29 +62,24 @@ class ChangelogGenerator:
             raise FileNotFoundError(f"Tokenizer not found at {tokenizer_path}")
 
         self.model = ctranslate2.Translator(str(model_path), device=self.device)
-        self.tokenizer = AutoTokenizer.from_pretrained(str(tokenizer_path))
+        self.tokenizer = Tokenizer.from_file(str(tokenizer_path))
 
-    def _load_model(self):
-        """Load the model based on backend."""
-        if self.backend == "transformers":
-            self._load_model_transformers()
-        else:
-            self._load_model_ctranslate2()
-
-    def _decode_changelog(self, output):
+    def _decode_changelog(self, output_tokens):
         """Decode model output while preserving newlines."""
-        if isinstance(output, list):
-            # CTranslate2 output (tokens)
-            decoded = self.tokenizer.decode(
-                self.tokenizer.convert_tokens_to_ids(output), skip_special_tokens=False
-            )
-        else:
-            # Transformers output (token IDs)
-            decoded = self.tokenizer.decode(output, skip_special_tokens=False)
+        # Convert token strings to IDs for decoding
+        token_ids = []
+        for token in output_tokens:
+            token_id = self.tokenizer.token_to_id(token)
+            if token_id is not None:
+                token_ids.append(token_id)
 
-        # Remove special tokens
-        decoded = decoded.replace(self.tokenizer.pad_token or "<pad>", "")
-        decoded = decoded.replace(self.tokenizer.eos_token or "</s>", "")
+        # Decode using the tokenizers library
+        decoded = self.tokenizer.decode(token_ids)
+
+        # Remove special tokens. T5 pads with <pad> and ends with </s>.
+        # extra_id_* are used for span corruption.
+        decoded = decoded.replace("<pad>", "")
+        decoded = decoded.replace("</s>", "")
         decoded = re.sub(r"<extra_id_\d+>", "", decoded)
 
         return decoded.strip()
@@ -129,41 +95,21 @@ class ChangelogGenerator:
         Returns:
             Generated changelog text
         """
-        if self.backend == "transformers":
-            return self._generate_transformers(input_text, beam_size)
-        else:
-            return self._generate_ctranslate2(input_text, beam_size)
+        # Guess 4 chars per token. 1024 tokens is ~4096 chars.
+        # We truncate the input text to roughly 1000 tokens to avoid exceeding model limits.
+        # T5 expects </s> at the end of input.
+        input_text_truncated = input_text[:4000] + "</s>"
 
-    def _generate_transformers(self, input_text, beam_size):
-        """Generate using transformers backend."""
-        inputs = self.tokenizer(
-            input_text, return_tensors="pt", max_length=1024, truncation=True
-        )
-
-        if self.device == "cuda":
-            inputs = {k: v.to("cuda") for k, v in inputs.items()}
-
-        outputs = self.model.generate(
-            **inputs,
-            max_length=512,
-            num_beams=beam_size,
-            no_repeat_ngram_size=4,
-            early_stopping=True,
-        )
-
-        return self._decode_changelog(outputs[0])
-
-    def _generate_ctranslate2(self, input_text, beam_size):
-        """Generate using CTranslate2 backend."""
-        input_tokens = self.tokenizer.convert_ids_to_tokens(
-            self.tokenizer.encode(input_text, max_length=1024, truncation=True)
-        )
+        # Encode text to tokens using tokenizers library
+        encoding = self.tokenizer.encode(input_text_truncated)
+        input_tokens = encoding.tokens
 
         results = self.model.translate_batch(
             [input_tokens],
             beam_size=beam_size,
             max_decoding_length=512,
             no_repeat_ngram_size=4,
+            max_input_length=1024,
         )
 
         return self._decode_changelog(results[0].hypotheses[0])

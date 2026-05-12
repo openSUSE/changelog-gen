@@ -4,13 +4,13 @@ AI-powered changelog generator that uses fine-tuned T5 models to create human-re
 
 ## Features
 
-- 🤖 Uses fine-tuned T5 models (small/base/large) for changelog generation
-- ⚡ Supports both CTranslate2 (2-4x faster) and Transformers backends
-- 🔧 Integrates with `osc` and `git` workflows
-- ✏️ Opens editor for review (like `osc vc`)
-- 📝 Includes original changes as comments for verification
-- 🎯 Supports multiple input sources (osc, git commit ranges, stdin)
-- 📦 Installable via pip/wheel
+- Uses fine-tuned T5 models (small/base/large) for changelog generation
+- Supports both CTranslate2 (2-4x faster) and Transformers backends
+- Integrates with `osc` and `git` workflows
+- Opens editor for review (like `osc vc`)
+- Includes original changes as comments for verification
+- Supports multiple input sources (osc, git commit ranges, stdin)
+- Installable via pip/wheel
 
 ## Installation
 
