@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 """Command-line interface for AI changelog generator."""
 
 import argparse

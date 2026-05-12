@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 """OSC wrapper for AI changelog generation."""
 
 import argparse
