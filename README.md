@@ -2,16 +2,9 @@
 
 AI-powered changelog generator that uses fine-tuned T5 models to create human-readable changelog entries from code changes. Integrates with both `osc` (Open Build Service) and `git`.
 
-## Features
+It is mostly a thin wrapper to pipe the diff via `ctranslate2` to a the fine tuned model, which is downloaded automatically. The model itself should be able to run on machines with 1GB of main memory.
 
-- 🤖 Uses fine-tuned T5 models (small/base/large) for changelog generation
-- ⚡ Fast inference with CTranslate2 backend (2-4x faster than transformers)
-- 📥 Automatic model download from Hugging Face
-- 🔧 Integrates with `osc` and `git` workflows
-- ✏️ Opens editor for review (like `osc vc`)
-- 📝 Includes original changes as comments for verification
-- 🎯 Supports multiple input sources (osc, git commit ranges, stdin)
-- 📦 Installable via pip
+This software was mostly vibe coded.
 
 ## Installation
 
@@ -40,24 +33,6 @@ Models are automatically downloaded on first use and stored in:
 
 You can specify a custom location with `--model-path`.
 
-## Package Structure
-
-```
-changelog-gen/
-├── pyproject.toml          # Package configuration
-├── requirements.txt        # Dependencies
-├── LICENSE                 # Apache 2.0 license
-├── README.md               # This file
-├── changelog-ai            # Legacy standalone script
-├── osc-ai-vc               # Legacy OSC wrapper script
-├── example.py              # Usage example
-└── changelog_ai/           # Main package
-    ├── __init__.py         # Package initialization
-    ├── __main__.py         # Allow python -m changelog_ai
-    ├── cli.py              # Command-line interface
-    ├── model.py            # Model loading and generation
-    └── osc_wrapper.py      # OSC integration wrapper
-```
 
 ## Usage
 
@@ -175,40 +150,6 @@ changelog-ai --model-path /custom/path/to/models
 | `--stdin` | Read diff from stdin |
 | `--repo-path PATH` | Path to repository (default: current directory) |
 
-## Model Selection
-
-### Recommended: t5-large with CTranslate2 int8
-
-```bash
-./changelog-ai --model-size large --backend ctranslate2 --quantization int8
-```
-
-This provides the best quality-to-speed ratio and works on both CPU and GPU.
-
-### Model Comparison
-
-| Model | Size on Disk | Speed | Quality | Notes |
-|-------|--------------|-------|---------|-------|
-| t5-large | ~770 MB | Fast | Best | Recommended |
-| t5-base | ~220 MB | Very Fast | Good | Good for quick iterations |
-| t5-small | ~60 MB | Very Fast | Poor | Not recommended (hallucinates) |
-
-**Note**: t5-small is NOT recommended as it tends to generate hallucinated changelogs.
-
-### Quantization Options
-
-| Quantization | Speed | Quality | Device Support |
-|--------------|-------|---------|----------------|
-| `int8` | Fast | Good | CPU, CUDA |
-| `float16` | Medium | Better | CPU, CUDA |
-| `int8_float16` | Very Fast | Good | CUDA only |
-| `float32` | Slow | Best | CPU, CUDA |
-
-For GPU users, `int8_float16` provides the best performance:
-
-```bash
-changelog-ai --device cuda --quantization int8_float16
-```
 
 ## Output Format
 
@@ -387,13 +328,6 @@ isort changelog_ai/
 ## License
 
 Apache 2.0 (same as the T5 model)
-
-## Credits
-
-- Fine-tuned T5 models by Christian Goll
-- Model: [mslacken/t5-finetune-changelog](https://huggingface.co/mslacken/t5-finetune-changelog)
-- Built with [CTranslate2](https://github.com/OpenNMT/CTranslate2)
-- Uses [HuggingFace Tokenizers](https://github.com/huggingface/tokenizers)
 
 ## Related Links
 
