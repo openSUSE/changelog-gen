@@ -119,8 +119,19 @@ def get_changes(args):
             print(f"Error running git diff: {e}", file=sys.stderr)
             sys.exit(1)
 
-    # Try osc diff
+    # Try osc (osc sr -d first, then osc diff)
     print("Getting changes from osc...", file=sys.stderr)
+    try:
+        print("Trying osc sr -d...", file=sys.stderr)
+        result = subprocess.run(
+            ["osc", "sr", "-d"], capture_output=True, text=True, check=True
+        )
+        if result.stdout.strip():
+            return result.stdout
+        print("osc sr -d returned no changes, trying osc diff...", file=sys.stderr)
+    except subprocess.CalledProcessError:
+        pass
+
     try:
         result = subprocess.run(
             ["osc", "diff"], capture_output=True, text=True, check=True
